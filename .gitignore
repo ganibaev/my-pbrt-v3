@@ -1,4 +1,9 @@
 *~
+.cache
+.vscode
+debug
+build
+src/debug
 src/build
 src/bin
 src/objs

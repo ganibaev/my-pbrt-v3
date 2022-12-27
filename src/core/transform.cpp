@@ -236,15 +236,20 @@ Transform LookAt(const Point3f &pos, const Point3f &look, const Vector3f &up) {
 }
 
 Bounds3f Transform::operator()(const Bounds3f &b) const {
-    const Transform &M = *this;
-    Bounds3f ret(M(Point3f(b.pMin.x, b.pMin.y, b.pMin.z)));
-    ret = Union(ret, M(Point3f(b.pMax.x, b.pMin.y, b.pMin.z)));
-    ret = Union(ret, M(Point3f(b.pMin.x, b.pMax.y, b.pMin.z)));
-    ret = Union(ret, M(Point3f(b.pMin.x, b.pMin.y, b.pMax.z)));
-    ret = Union(ret, M(Point3f(b.pMin.x, b.pMax.y, b.pMax.z)));
-    ret = Union(ret, M(Point3f(b.pMax.x, b.pMax.y, b.pMin.z)));
-    ret = Union(ret, M(Point3f(b.pMax.x, b.pMin.y, b.pMax.z)));
-    ret = Union(ret, M(Point3f(b.pMax.x, b.pMax.y, b.pMax.z)));
+    Bounds3f ret;
+    for (int i = 0; i < 3; ++i) {
+        // Start with a degenerate interval at T[i] to account for translation.
+        ret.pMin[i] = m.m[i][3];
+        ret.pMax[i] = m.m[i][3];
+
+        // Add in extreme values obtained by computing the products of the mins and maxes with the elements of the i’th row of M
+        for (int j = 0; j < 3; ++j) {
+            auto first = m.m[i][j] * b.pMin[j];
+            auto second = m.m[i][j] * b.pMax[j];
+            ret.pMin[i] += std::min(first, second);
+            ret.pMax[i] += std::max(first, second);
+        }
+    }
     return ret;
 }
 
